@@ -26,5 +26,5 @@ spring:
 
 logging:
   level:
-    org.flywaydb: DEBUGó
+    org.flywaydb: DEBUG
     org.flywaydb.core: TRACE
