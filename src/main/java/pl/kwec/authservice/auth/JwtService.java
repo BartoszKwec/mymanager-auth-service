@@ -13,7 +13,7 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    private static final String JWT_SECRET = "supersecretkey12345";
+    private static final String JWT_SECRET = "supersecretkey1234567890supersecretkey";
     private static final long JWT_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24h
 
     private final Algorithm algorithm;
