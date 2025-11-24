@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,22 +14,23 @@ import java.util.Map;
 @Service
 public class JwtService {
 
-    private static final String JWT_SECRET = "supersecretkey1234567890supersecretkey";
-    private static final long JWT_EXPIRATION_MS = 24 * 60 * 60 * 1000; // 24h
-
     private final Algorithm algorithm;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final long jwtExpirationMs;
 
-    public JwtService() {
-        this.algorithm = Algorithm.HMAC256(JWT_SECRET);
+    public JwtService(
+            @Value("${jwt.secret}") String jwtSecret,
+            @Value("${jwt.expiration-ms}") long jwtExpirationMs) {
+        this.algorithm = Algorithm.HMAC256(jwtSecret);
         this.passwordEncoder = new BCryptPasswordEncoder();
+        this.jwtExpirationMs = jwtExpirationMs;
     }
 
     public String generateToken(final String subject, final Map<String, String> claims) {
         var jwtBuilder = JWT.create()
                 .withSubject(subject)
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + JWT_EXPIRATION_MS));
+                .withExpiresAt(new Date(System.currentTimeMillis() + jwtExpirationMs));
 
         if (claims != null) {
             claims.forEach(jwtBuilder::withClaim);
@@ -48,11 +50,6 @@ public class JwtService {
         return decodedJWT.getSubject();
     }
 
-    public String getClaim(final String token, final String claimName) throws JWTVerificationException {
-        DecodedJWT decodedJWT = verifyToken(token);
-        return decodedJWT.getClaim(claimName).asString();
-    }
-
     public String validateTokenAndGetUsername(final String token) {
         try {
             return getSubject(token);
@@ -63,9 +60,5 @@ public class JwtService {
 
     public String encodePassword(final String rawPassword) {
         return passwordEncoder.encode(rawPassword);
-    }
-
-    public boolean matchesPassword(final String rawPassword, final String encodedPassword) {
-        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }
